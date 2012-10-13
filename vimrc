@@ -1,3 +1,5 @@
+runtime bundle/vim-pathogen/autoload/pathogen.vim
+call pathogen#infect()
 
 " disable arrow keys
 noremap <up> <nop>
