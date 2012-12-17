@@ -21,10 +21,31 @@ set wildmode=list:full
 set expandtab shiftround tabstop=4 shiftwidth=4 softtabstop=4
 
 let mapleader='\'
-nnoremap <leader>v :e $MYVIMRC<cr>
+nnoremap <leader>v :edit $MYVIMRC<cr>
 
 if has('autocmd')
     filetype on
     autocmd! FileType make setlocal noexpandtab
+    autocmd! FileType proto setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! BufWritePost $MYVIMRC source $MYVIMRC
 endif
+
+command! DiffOrig vert new | set bt=nofile | r # | 0d_ | diffthis
+    \ | wincmd p | diffthis
+
+" Thanks to c++11 lambdas; see :help ft-c-syntax
+let c_no_curly_error = 1
+
+command! SvnBlame call s:svnBlame()
+
+function! s:svnBlame()
+    let cur_line = line(".")
+    setlocal nowrap
+    setlocal scrollbind
+    15vnew
+    setlocal scrollbind
+    r !svn blame # | awk '{printf " \%4s  \%-7s\n",$1,$2}'
+    g/^$/d
+    exec "normal " . cur_line . "G"
+    syncbind
+endfunction
