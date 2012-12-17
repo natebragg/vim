@@ -44,13 +44,18 @@ function! s:svnBlame(...)
     setlocal nowrap
     setlocal scrollbind
     15vnew
+    setlocal buftype=nofile
+    setlocal bufhidden=wipe
     setlocal scrollbind
     if a:0 > 0
         exec 'r !svn blame -r ' . a:1 . ' # | awk '"'"'{printf " \%4s  \%-7s\n",$1,$2}'"'"
+        exec 'silent file svn\ blame\ -r\ ' . a:1 . '\ #'
     else
         r !svn blame # | awk '{printf " \%4s  \%-7s\n",$1,$2}'
+        silent file svn\ blame\ #
     endif
     g/^$/d
+    setlocal nomodifiable
     exec "normal " . cur_line . "G"
     syncbind
 endfunction
