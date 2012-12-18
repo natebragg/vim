@@ -3,12 +3,12 @@
 command! -nargs=? SvnBlame call <SID>svnBlameStart(<args>)
 
 function! <SID>svnBlameStart(...)
-    let cur_line = line(".")
     setlocal nowrap
     setlocal scrollbind
     15vnew
     nnoremap <buffer> <silent> quit :call <SID>svnBlameCleanup()
     let b:blame_target = bufnr("#")
+    let b:target_window = winnr("#")
     let b:target_modifiable = getbufvar(b:blame_target, "&modifiable")
     call setbufvar( b:blame_target, "&modifiable", 0 )
     setlocal buftype=nofile
@@ -22,22 +22,34 @@ function! <SID>svnBlameStart(...)
         let revision = substitute(system("svn log -q -l 1 ".name." | awk '/^r[0-9]+/ {print $1}'"), "\n", "", "")
         call <SID>svnBlame(name, revision)
     endif
-    exec "normal " . cur_line . "G"
-    syncbind
 endfunction
 
 function! <SID>svnBlame(name, revision)
     setlocal modifiable
     normal ggdG
-    exec 'r !svn blame -r '.a:revision.' '.a:name.' | awk '"'"'{printf " \%4s  \%-7s\n",$1,$2}'"'"
-    g/^$/d
+    exec 'r !svn blame -r '.a:revision.' '.a:name." | awk '"'{printf " \%4s  \%-7s\n",$1,$2}'"'"
+    normal ggdd
     exec 'silent file svn\ blame\ -r\ '.a:revision.'\ '.a:name
     setlocal nomodifiable
+
+    let blame_window = winnr()
+    exec b:target_window."wincmd w"
+    let cur_line = line(".")
+    setlocal modifiable
+    normal ggdG
+    exec 'r !svn cat -r '.a:revision.' '.a:name
+    normal ggdd
+    setlocal nomodifiable
+    exec "normal " . cur_line . "G"
+    syncbind
+
+    exec blame_window."wincmd w"
+    exec "normal " . cur_line . "G"
     exec 'nnoremap <buffer> <silent> <C-N> :call <SID>svnBlame("'.a:name.'", <SID>svnGetNewer("'.a:revision.'"))<cr>'
-    exec 'nnoremap <buffer> <silent> <C-O> :call <SID>svnBlame("'.a:name.'", <SID>svnGetOlder("'.a:revision.'"))<cr>'
+    exec 'nnoremap <buffer> <silent> <C-P> :call <SID>svnBlame("'.a:name.'", <SID>svnGetPrior("'.a:revision.'"))<cr>'
 endfunction
 
-function! <SID>svnGetOlder(revision)
+function! <SID>svnGetPrior(revision)
     let target_rev = substitute(system("awk '{if(seen)rev=$0; seen=0} /".a:revision."/ {seen=1;rev=$0} END{print rev}' <<ENDHERE\n".b:all_revisions."ENDHERE\n"), "\n", "", "")
     return target_rev
 endfunction
