@@ -28,6 +28,8 @@ if has('autocmd')
     autocmd! FileType make setlocal noexpandtab
     autocmd! FileType proto setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! FileType sql setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    autocmd! FileType svn setlocal textwidth=80 formatoptions+=a
+    autocmd! FileType gitcommit setlocal textwidth=80 formatoptions+=a
     autocmd! BufWritePost $MYVIMRC source $MYVIMRC
     "autocmd! CursorHold * checktime
 endif
