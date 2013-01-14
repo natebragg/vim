@@ -47,6 +47,7 @@ function! <SID>svnBlame(name, revision)
     exec "normal " . cur_line . "G"
     exec 'nnoremap <buffer> <silent> <C-N> :call <SID>svnBlame("'.a:name.'", <SID>svnGetNewer("'.a:revision.'"))<cr>'
     exec 'nnoremap <buffer> <silent> <C-P> :call <SID>svnBlame("'.a:name.'", <SID>svnGetPrior("'.a:revision.'"))<cr>'
+    exec 'nnoremap <buffer> <silent> gr :call <SID>svnBlame("'.a:name.'", expand("<cword>"))<cr>'
 endfunction
 
 function! <SID>svnGetPrior(revision)
