@@ -1,7 +1,15 @@
 runtime bundle/vim-pathogen/autoload/pathogen.vim
 call pathogen#infect()
 
+if has("win32")
+  set nocompatible
+  source $VIMRUNTIME/vimrc_example.vim
+
+  colorscheme desert
+endif
+
 " disable arrow keys
+noremap <F1> <nop>
 noremap <up> <nop>
 noremap <down> <nop>
 noremap <left> <nop>
