@@ -33,6 +33,10 @@ set expandtab shiftround tabstop=4 shiftwidth=4 softtabstop=4
 let mapleader='\'
 nnoremap <leader>v :edit $MYVIMRC<cr>
 
+nnoremap <leader>d :execute 'Gtags' expand("<cword>")<cr>
+nnoremap <leader>r :execute 'Gtags -r' expand("<cword>")<cr>
+nnoremap <leader>g :execute 'Gtags -g' expand("<cword>")<cr>
+
 if has('autocmd')
     filetype on
     autocmd! FileType make setlocal noexpandtab
