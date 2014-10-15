@@ -6,7 +6,7 @@ function! <SID>svnBlameStart(...)
     setlocal nowrap
     setlocal scrollbind
     15vnew
-    nnoremap <buffer> <silent> quit :call <SID>svnBlameCleanup()
+    nnoremap <buffer> <silent> quit :call <SID>svnBlameCleanup()<cr>
     let b:blame_target = bufnr("#")
     let b:target_window = winnr("#")
     let b:target_modifiable = getbufvar(b:blame_target, "&modifiable")
@@ -45,6 +45,7 @@ function! <SID>svnBlame(name, revision)
 
     exec blame_window."wincmd w"
     exec "normal " . cur_line . "G"
+    exec 'nnoremap <buffer> <silent> <C-G> :call <SID>svnLog("'.a:name.'", "'.a:revision.'")<cr>'
     exec 'nnoremap <buffer> <silent> <C-N> :call <SID>svnBlame("'.a:name.'", <SID>svnGetNewer("'.a:revision.'"))<cr>'
     exec 'nnoremap <buffer> <silent> <C-P> :call <SID>svnBlame("'.a:name.'", <SID>svnGetPrior("'.a:revision.'"))<cr>'
     exec 'nnoremap <buffer> <silent> gr :call <SID>svnBlame("'.a:name.'", expand("<cword>"))<cr>'
@@ -59,6 +60,10 @@ function! <SID>svnGetNewer(revision)
     let target_rev = substitute(system("awk '/".a:revision."/ {if(rev){print rev}else{print $0}} {rev=$0}' <<ENDHERE\n".b:all_revisions."ENDHERE\n"), "\n", "", "")
     echo target_rev
     return target_rev
+endfunction
+
+function! <SID>svnLog(name, revision)
+    exec '!svn log -r '.a:revision.' '.a:name
 endfunction
 
 function! <SID>svnBlameCleanup()
