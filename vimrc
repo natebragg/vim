@@ -26,6 +26,8 @@ set hidden
 set wildmenu
 set wildmode=list:full
 
+set winminheight=0
+
 set expandtab shiftround tabstop=4 shiftwidth=4 softtabstop=4
 
 let mapleader='\'
