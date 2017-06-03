@@ -62,3 +62,6 @@ let c_no_curly_error = 1
 
 " remove comment leaders on join and add them in insert mode
 set formatoptions+=jr
+
+" treat leading zeros as decimal for ctrl-A/ctrl-X
+set nrformats-=octal
