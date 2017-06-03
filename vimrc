@@ -59,3 +59,6 @@ command! DiffOrig vert new | set bt=nofile | r # | 0d_ | diffthis
 
 " Thanks to c++11 lambdas; see :help ft-c-syntax
 let c_no_curly_error = 1
+
+" remove comment leaders on join and add them in insert mode
+set formatoptions+=jr
