@@ -49,6 +49,7 @@ if has('autocmd')
     autocmd! FileType xslt setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! FileType svn setlocal textwidth=80 formatoptions+=a
     autocmd! FileType gitcommit setlocal textwidth=80 formatoptions+=a
+    autocmd! FileType tex setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! BufWritePost $MYVIMRC source $MYVIMRC
     "autocmd! CursorHold * checktime
 endif
