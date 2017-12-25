@@ -66,3 +66,7 @@ set formatoptions+=jr
 
 " treat leading zeros as decimal for ctrl-A/ctrl-X
 set nrformats-=octal
+
+" Printers, found with lpstat -a
+
+set printoptions+=syntax:y,paper:letter,duplex:off,wrap:n
