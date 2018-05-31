@@ -43,7 +43,7 @@ noremap <leader>f :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(get
 noremap <leader>F :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(getchar()) . "', 'Wb')"<cr>
 
 if has('autocmd')
-    filetype on
+    filetype plugin indent on
     autocmd! FileType make setlocal noexpandtab
     autocmd! FileType scheme setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! FileType proto setlocal tabstop=2 softtabstop=2 shiftwidth=2
