@@ -46,6 +46,7 @@ if has('autocmd')
     filetype plugin indent on
     autocmd! FileType make setlocal noexpandtab
     autocmd! FileType scheme setlocal tabstop=2 softtabstop=2 shiftwidth=2
+    autocmd! FileType lua setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! FileType proto setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! FileType sql setlocal tabstop=2 softtabstop=2 shiftwidth=2
     autocmd! FileType xml setlocal tabstop=2 softtabstop=2 shiftwidth=2
