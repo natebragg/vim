@@ -39,8 +39,8 @@ nnoremap <leader>d :execute 'Gtags' expand("<cword>")<cr>
 nnoremap <leader>r :execute 'Gtags -r' expand("<cword>")<cr>
 nnoremap <leader>g :execute 'Gtags -g' expand("<cword>")<cr>
 
-nnoremap <leader>f :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(getchar()) . "', 'W')"<cr>
-nnoremap <leader>F :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(getchar()) . "', 'Wb')"<cr>
+noremap <leader>f :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(getchar()) . "', 'W')"<cr>
+noremap <leader>F :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(getchar()) . "', 'Wb')"<cr>
 
 if has('autocmd')
     filetype on
