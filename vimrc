@@ -32,6 +32,8 @@ set expandtab shiftround tabstop=4 shiftwidth=4 softtabstop=4
 
 set hlsearch
 
+syntax on
+
 let mapleader='\'
 nnoremap <leader>v :edit $MYVIMRC<cr>
 
