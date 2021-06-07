@@ -41,8 +41,15 @@ nnoremap <leader>d :execute 'Gtags' expand("<cword>")<cr>
 nnoremap <leader>r :execute 'Gtags -r' expand("<cword>")<cr>
 nnoremap <leader>g :execute 'Gtags -g' expand("<cword>")<cr>
 
+" find in column
 noremap <leader>f :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(getchar()) . "', 'W')"<cr>
 noremap <leader>F :execute 'echo search(''\%' . virtcol('.') . 'c' . nr2char(getchar()) . "', 'Wb')"<cr>
+
+" the current time
+nnoremap <leader>t "=substitute(strftime("%H:%M"), "^0\\+\\(:0\\?\\)\\?", "", "")<cr>P
+vnoremap <leader>t "=substitute(strftime("%H:%M"), "^0\\+\\(:0\\?\\)\\?", "", "")<cr>P
+nnoremap <leader>T "=substitute(strftime("%H:%M:%S"), "^0\\+\\(:0\\?\\)\\?", "", "")<cr>P
+vnoremap <leader>T "=substitute(strftime("%H:%M:%S"), "^0\\+\\(:0\\?\\)\\?", "", "")<cr>P
 
 if has('autocmd')
     filetype plugin indent on
