@@ -51,6 +51,12 @@ vnoremap <leader>t "=substitute(strftime("%H:%M"), "^0\\+\\(:0\\?\\)\\?", "", ""
 nnoremap <leader>T "=substitute(strftime("%H:%M:%S"), "^0\\+\\(:0\\?\\)\\?", "", "")<cr>P
 vnoremap <leader>T "=substitute(strftime("%H:%M:%S"), "^0\\+\\(:0\\?\\)\\?", "", "")<cr>P
 
+function! RenumID(idroot, offset, ...)
+    let l:start = a:0 >= 1 ? a:1 : 0
+    " for \= see :help sub-replace-expression
+    exe "s/\\(".a:idroot."\\)\\(\\d\\+\\)/\\=submatch(1).(submatch(2)+(submatch(2)<".l:start."?0:".a:offset."))/g"
+endfunction
+
 if has('autocmd')
     filetype plugin indent on
     autocmd! FileType make setlocal noexpandtab
