@@ -77,20 +77,35 @@ function! PopAllRegisters(stashed_registers)
     endfor
 endfunction
 
-function! IndentBrace(startbrace)
-    let l:line1 = line('.')
-    let l:col1  = col('.')
-    let l:curchar = strgetchar(getline(l:line1), l:col1 - 1)
-    let l:found = l:curchar == char2nr(a:startbrace)
-    if !l:found
-        execute "normal! [" . a:startbrace
-        let l:line2 = line('.')
-        let l:col2  = col('.')
-        let l:found = l:line1 != l:line2 || l:col1 != l:col2
-    endif
+function! IndentBrace(startbrace, outertextobj)
+    let l:line0 = line('.')
+    let l:col0  = col('.')
+    execute "normal! v"
+    execute "normal! " . a:outertextobj
+    let l:linerhs = line('.')
+    let l:colrhs  = col('.')
+    execute "normal! o"
+    let l:linelhs = line('.')
+    let l:collhs  = col('.')
+    let l:startchar = strgetchar(getline(l:linelhs), l:collhs - 1)
+    " succeeds when the cursor's highlighted start
+    " and end are different positions
+    let l:moved = l:linelhs != l:linerhs || l:collhs != l:colrhs
+    " and for sanity's sake the start position cursor
+    " points at the start brace character.
+    let l:found = l:startchar == char2nr(a:startbrace) && l:moved
     if l:found
-        execute "normal! i(l%a)%"
+        execute "normal! oA)gvovi("
+    else
+      execute "normal! v"
     endif
+    " if the line didn't change, to stay on the same
+    " character the column must move forward by one
+    " to account for the new starting brace
+    if l:found && l:line0 == l:linelhs
+      let l:col0 = l:col0 + 1
+    endif
+    call setpos('.', [0, l:line0, l:col0, 0])
 endfunction
 
 function! OutdentBrace(startbrace)
@@ -114,8 +129,9 @@ function! OutdentBrace(startbrace)
     endif
 endfunction
 
-nnoremap <leader>[{ :call IndentBrace('{')<cr>
-nnoremap <leader>[( :call IndentBrace('(')<cr>
+nnoremap <leader>[{ :call IndentBrace('{', 'aB')<cr>
+nnoremap <leader>[( :call IndentBrace('(', 'ab')<cr>
+nnoremap <leader>[[ :call IndentBrace('[', 'a[')<cr>
 nnoremap <leader>]} :call OutdentBrace('{')<cr>
 nnoremap <leader>]) :call OutdentBrace('(')<cr>
 
