@@ -135,6 +135,107 @@ nnoremap <leader>[[ :call IndentBrace('[', 'a[')<cr>
 nnoremap <leader>]} :call OutdentBrace('{')<cr>
 nnoremap <leader>]) :call OutdentBrace('(')<cr>
 
+function! IsBlock(line, col)
+    let l:nrparen = char2nr('(')
+    let l:nrbrack = char2nr('{')
+    let l:nrsquar = char2nr('[')
+    let l:chratlc = strgetchar(getline(a:line), a:col - 1)
+    let l:isparen = l:chratlc == l:nrparen
+    let l:isbrack = l:chratlc == l:nrbrack
+    let l:issquar = l:chratlc == l:nrsquar
+    let l:isblock = l:isparen || l:isbrack || l:issquar
+    return l:isblock
+endfunction
+
+function! GotoEndtoken(line, col, tokenline, tokencol)
+    if IsBlock(a:tokenline, a:tokencol)
+        " if we started on a block, we have arrived at the end of the block
+        call setpos('.', [0, a:tokenline, a:tokencol, 0])
+        execute "normal! %"
+        return
+    endif
+
+    call setpos('.', [0, a:line, a:col, 0])
+    execute "normal! %"
+    let l:lineclose = line('.')
+    let l:colclose  = col('.')
+    call setpos('.', [0, a:tokenline, a:tokencol, 0])
+    let l:chratlc = strgetchar(getline(a:tokenline), a:tokencol - 1)
+    if l:chratlc == char2nr(' ')
+        execute "normal w"
+    endif
+    let l:tokenline = line('.')
+    let l:tokencol  = col('.')
+    let l:chratlc = strgetchar(getline(l:tokenline), l:tokencol - 1)
+    " spaces and closing braces and newlines are closing braces
+    execute "normal! t "
+    let l:colspace  = col('.')
+    execute "normal! $"
+    let l:colend  = col('.')
+    let l:mincol  = min([l:colspace, l:colend])
+    if l:mincol == l:tokencol
+        let l:mincol = l:colend
+    endif
+    if l:lineclose == l:tokenline
+        let l:mincol  = min([l:mincol, l:colclose])
+    endif
+    call setpos('.', [0, l:tokenline, l:mincol, 0])
+endfunction
+
+function! ExpandCompletely()
+    let l:line0 = line('.')
+    let l:col0  = col('.')
+    execute "normal! ^"
+    let l:lineopen = line('.')
+    let l:colopen  = col('.')
+    let l:onblock = IsBlock(l:lineopen, l:colopen)
+    " don't expand when not on a block
+    if ! l:onblock
+        call setpos('.', [0, l:line0, l:col0, 0])
+        return
+    endif
+    call GotoEndtoken(l:lineopen, l:colopen, l:lineopen, l:colopen)
+    let l:lineclose = line('.')
+    let l:colclose  = col('.')
+    call setpos('.', [0, l:lineopen, l:colopen, 0])
+    " we now know where this block begins and ends
+    execute "normal! l"
+    let l:linetoken = line('.')
+    let l:coltoken  = col('.')
+    " don't expand when there is no next character on the same line
+    if l:coltoken == l:colopen
+        call setpos('.', [0, l:line0, l:col0, 0])
+        return
+    endif
+    let l:atblock = IsBlock(l:linetoken, l:coltoken)
+    let l:startcol = l:atblock ? l:coltoken : l:colopen + &shiftwidth
+    while 1
+        call GotoEndtoken(l:lineopen, l:colopen, l:lineopen, l:colopen)
+        let l:lineclose = line('.')
+        let l:colclose  = col('.')
+        call GotoEndtoken(l:lineopen, l:colopen, l:linetoken, l:coltoken)
+        let l:linetokenend = line('.')
+        let l:coltokenend  = col('.')
+        if l:linetokenend == l:lineclose && l:colclose - l:coltokenend <= 1
+            break
+        endif
+        execute "normal! a^"
+        let l:linetoken = line('.')
+        let l:coltoken  = col('.')
+        let l:coloffset = l:startcol - l:coltoken
+        if l:coloffset > 0
+            execute "normal! " .    l:coloffset  . "i ^"
+        else
+            execute "normal! " . (- l:coloffset) . "X^"
+        endif
+        let l:linetoken = line('.')
+        let l:coltoken  = col('.')
+    endwhile
+endfunction
+
+nnoremap <leader>l %a<cr><esc>
+nnoremap <leader>t :call ExpandCompletely()<cr>
+
 if has('autocmd')
     filetype plugin indent on
     autocmd! FileType make setlocal noexpandtab
