@@ -116,32 +116,47 @@ function! IndentBrace(startbrace, outertextobj)
     call setpos('.', [0, l:line0, l:col0, 0])
 endfunction
 
-function! OutdentBrace(startbrace)
-    execute "normal [" . a:startbrace
-    let line1 = line('.')
-    let l:col1  = col('.')
-    let l:curchar = strgetchar(getline(l:line1), l:col1 - 1)
+function! OutdentBrace(startbrace, outertextobj)
+    let line0 = line('.')
+    let l:col0  = col('.')
+    execute "normal v"
+    execute "normal " . a:outertextobj
+    let l:linerhs = line('.')
+    let l:colrhs  = col('.')
+    execute "normal! o"
+    let l:linelhs = line('.')
+    let l:collhs  = col('.')
+    let l:curchar = strgetchar(getline(l:linelhs), l:collhs - 1)
     let l:found = l:curchar == char2nr(a:startbrace)
     if l:found
-        let l:old_reg = PushAllRegisters()
-        let l:autoindent = &autoindent
-        execute "normal! yi" . a:startbrace
-        let l:contents = @0
-        execute "normal [" . a:startbrace
-        set noautoindent
-        " this has a bug, in that the format options mess with l:contents
-        " (e.g., a comment will comment out the whole block)
-        execute "normal! c%" . l:contents
-        let &autoindent = l:autoindent
-        call PopAllRegisters(l:old_reg)
+        call setpos('.', [0, l:linerhs, l:colrhs, 0])
+        execute "normal! \"_x"
+        call setpos('.', [0, l:linelhs, l:collhs, 0])
+        execute "normal! \"_x"
+        for i in range(l:linerhs - l:linelhs)
+            let l:line = l:linelhs + i + 1
+            call setpos('.', [0, l:line, l:collhs, 0])
+            let l:curchar = strgetchar(getline(l:line), l:collhs - 1)
+            if l:curchar == char2nr(' ')
+                execute "normal! \"_x"
+            endif
+        endfor
     endif
+    " if the line didn't change, to stay on the same
+    " character the column must move backward by one
+    " to account for the new starting brace
+    if l:found && l:line0 == l:linelhs
+      let l:col0 = l:col0 - 1
+    endif
+    call setpos('.', [0, l:line0, l:col0, 0])
 endfunction
 
 nnoremap <leader>[{ :call IndentBrace('{', 'aB')<cr>
 nnoremap <leader>[( :call IndentBrace('(', 'ab')<cr>
 nnoremap <leader>[[ :call IndentBrace('[', 'a[')<cr>
-nnoremap <leader>]} :call OutdentBrace('{')<cr>
-nnoremap <leader>]) :call OutdentBrace('(')<cr>
+nnoremap <leader>]} :call OutdentBrace('{', 'aB')<cr>
+nnoremap <leader>]) :call OutdentBrace('(', 'ab')<cr>
+nnoremap <leader>]] :call OutdentBrace('[', 'a[')<cr>
 
 function! IsBlock(line, col)
     let l:nrparen = char2nr('(')
