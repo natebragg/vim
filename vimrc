@@ -77,7 +77,7 @@ function! PopAllRegisters(stashed_registers)
     endfor
 endfunction
 
-function! IndentBrace(startbrace, outertextobj)
+function! BlockAction(startbrace, outertextobj, startaction, endaction, middleaction, offset)
     let l:line0 = line('.')
     let l:col0  = col('.')
     execute "normal! v"
@@ -87,68 +87,48 @@ function! IndentBrace(startbrace, outertextobj)
     execute "normal! o"
     let l:linelhs = line('.')
     let l:collhs  = col('.')
+    execute "normal! v"
     let l:startchar = strgetchar(getline(l:linelhs), l:collhs - 1)
     " succeeds when the cursor's highlighted start
-    " and end are different positions
-    let l:moved = l:linelhs != l:linerhs || l:collhs != l:colrhs
+    " and end are different positions, and when the
+    " braces surround the starting character (since
+    " the visual object select commands will jump
+    " forward if not currently surrounded
+    let l:moved = (l:linelhs != l:linerhs || l:collhs != l:colrhs) &&
+                \ (l:linelhs == l:line0 && l:collhs <= l:col0 || l:linelhs < l:line0) &&
+                \ (l:linerhs == l:line0 && l:colrhs >= l:col0 || l:linerhs > l:line0)
     " and for sanity's sake the start position cursor
     " points at the start brace character.
     let l:found = l:startchar == char2nr(a:startbrace) && l:moved
     if l:found
-        execute "normal! oA)gvovi("
+        call setpos('.', [0, l:linerhs, l:colrhs, 0])
+        execute "normal! " . a:endaction
+        call setpos('.', [0, l:linelhs, l:collhs, 0])
+        execute "normal! " . a:startaction
         for i in range(l:linerhs - l:linelhs)
             let l:line = l:linelhs + i + 1
             call setpos('.', [0, l:line, l:collhs, 0])
             let l:curchar = strgetchar(getline(l:line), l:collhs - 1)
             if l:curchar == char2nr(' ')
-                execute "normal! I "
+                execute "normal! " . a:middleaction
             endif
         endfor
-    else
-      execute "normal! v"
     endif
     " if the line didn't change, to stay on the same
-    " character the column must move forward by one
+    " character the column must move by one
     " to account for the new starting brace
     if l:found && l:line0 == l:linelhs
-      let l:col0 = l:col0 + 1
+      let l:col0 = l:col0 + a:offset
     endif
     call setpos('.', [0, l:line0, l:col0, 0])
 endfunction
 
+function! IndentBrace(startbrace, outertextobj)
+    call BlockAction(a:startbrace, a:outertextobj, "i(", "a)", "I ", 1)
+endfunction
+
 function! OutdentBrace(startbrace, outertextobj)
-    let line0 = line('.')
-    let l:col0  = col('.')
-    execute "normal v"
-    execute "normal " . a:outertextobj
-    let l:linerhs = line('.')
-    let l:colrhs  = col('.')
-    execute "normal! o"
-    let l:linelhs = line('.')
-    let l:collhs  = col('.')
-    let l:curchar = strgetchar(getline(l:linelhs), l:collhs - 1)
-    let l:found = l:curchar == char2nr(a:startbrace)
-    if l:found
-        call setpos('.', [0, l:linerhs, l:colrhs, 0])
-        execute "normal! \"_x"
-        call setpos('.', [0, l:linelhs, l:collhs, 0])
-        execute "normal! \"_x"
-        for i in range(l:linerhs - l:linelhs)
-            let l:line = l:linelhs + i + 1
-            call setpos('.', [0, l:line, l:collhs, 0])
-            let l:curchar = strgetchar(getline(l:line), l:collhs - 1)
-            if l:curchar == char2nr(' ')
-                execute "normal! \"_x"
-            endif
-        endfor
-    endif
-    " if the line didn't change, to stay on the same
-    " character the column must move backward by one
-    " to account for the new starting brace
-    if l:found && l:line0 == l:linelhs
-      let l:col0 = l:col0 - 1
-    endif
-    call setpos('.', [0, l:line0, l:col0, 0])
+    call BlockAction(a:startbrace, a:outertextobj, "\"_x", "\"_x", "\"_x", -1)
 endfunction
 
 nnoremap <leader>[{ :call IndentBrace('{', 'aB')<cr>
