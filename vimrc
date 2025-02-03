@@ -96,6 +96,14 @@ function! IndentBrace(startbrace, outertextobj)
     let l:found = l:startchar == char2nr(a:startbrace) && l:moved
     if l:found
         execute "normal! oA)gvovi("
+        for i in range(l:linerhs - l:linelhs)
+            let l:line = l:linelhs + i + 1
+            call setpos('.', [0, l:line, l:collhs, 0])
+            let l:curchar = strgetchar(getline(l:line), l:collhs - 1)
+            if l:curchar == char2nr(' ')
+                execute "normal! I "
+            endif
+        endfor
     else
       execute "normal! v"
     endif
