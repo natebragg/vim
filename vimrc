@@ -77,11 +77,24 @@ function! PopAllRegisters(stashed_registers)
     endfor
 endfunction
 
-function! BlockAction(startbrace, outertextobj, startaction, endaction, middleaction, offset)
+function! SelectBlock(brace)
+    if a:brace == '{'
+        execute 'normal! va{'
+    elseif a:brace == '('
+        execute 'normal! va('
+    elseif a:brace == '['
+        execute 'normal! va['
+    elseif a:brace == '<'
+        execute 'normal! va<'
+    elseif a:brace == '"'
+        execute 'normal! va"'
+    endif
+endfunction
+
+function! BlockAction(startbrace, startaction, endaction, middleaction, offset)
     let l:line0 = line('.')
     let l:col0  = col('.')
-    execute "normal! v"
-    execute "normal! " . a:outertextobj
+    call SelectBlock(a:startbrace)
     let l:linerhs = line('.')
     let l:colrhs  = col('.')
     execute "normal! o"
@@ -123,20 +136,20 @@ function! BlockAction(startbrace, outertextobj, startaction, endaction, middleac
     call setpos('.', [0, l:line0, l:col0, 0])
 endfunction
 
-function! IndentBrace(startbrace, outertextobj)
-    call BlockAction(a:startbrace, a:outertextobj, "i(", "a)", "I ", 1)
+function! IndentBrace(startbrace)
+    call BlockAction(a:startbrace, "i(", "a)", "I ", 1)
 endfunction
 
-function! OutdentBrace(startbrace, outertextobj)
-    call BlockAction(a:startbrace, a:outertextobj, "\"_x", "\"_x", "\"_x", -1)
+function! OutdentBrace(startbrace)
+    call BlockAction(a:startbrace, "\"_x", "\"_x", "\"_x", -1)
 endfunction
 
-nnoremap <leader>[{ :call IndentBrace('{', 'aB')<cr>
-nnoremap <leader>[( :call IndentBrace('(', 'ab')<cr>
-nnoremap <leader>[[ :call IndentBrace('[', 'a[')<cr>
-nnoremap <leader>]} :call OutdentBrace('{', 'aB')<cr>
-nnoremap <leader>]) :call OutdentBrace('(', 'ab')<cr>
-nnoremap <leader>]] :call OutdentBrace('[', 'a[')<cr>
+nnoremap <leader>[{ :call IndentBrace('{')<cr>
+nnoremap <leader>[( :call IndentBrace('(')<cr>
+nnoremap <leader>[[ :call IndentBrace('[')<cr>
+nnoremap <leader>]} :call OutdentBrace('{')<cr>
+nnoremap <leader>]) :call OutdentBrace('(')<cr>
+nnoremap <leader>]] :call OutdentBrace('[')<cr>
 
 function! IsBlock(line, col)
     let l:nrparen = char2nr('(')
@@ -164,7 +177,9 @@ function! GotoEndtoken(line, col, tokenline, tokencol)
     if IsBlock(l:tokenline, l:tokencol)
         " if we started on a block, we have arrived at the end of the block
         call setpos('.', [0, l:tokenline, l:tokencol, 0])
-        execute "normal! %"
+        let l:chratlc = strgetchar(getline(a:tokenline), a:tokencol - 1)
+        call SelectBlock(nr2char(l:chratlc))
+        execute "normal! v"
         return
     endif
 
