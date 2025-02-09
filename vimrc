@@ -151,9 +151,19 @@ function! IsBlock(line, col)
 endfunction
 
 function! GotoEndtoken(line, col, tokenline, tokencol)
-    if IsBlock(a:tokenline, a:tokencol)
+    call setpos('.', [0, a:tokenline, a:tokencol, 0])
+    let l:chratlc = strgetchar(getline(a:tokenline), a:tokencol - 1)
+    if l:chratlc == char2nr(' ') ||
+     \ l:chratlc == char2nr('	')
+        execute "normal w"
+    endif
+    " the position of the first non-space character
+    let l:tokenline = line('.')
+    let l:tokencol  = col('.')
+
+    if IsBlock(l:tokenline, l:tokencol)
         " if we started on a block, we have arrived at the end of the block
-        call setpos('.', [0, a:tokenline, a:tokencol, 0])
+        call setpos('.', [0, l:tokenline, l:tokencol, 0])
         execute "normal! %"
         return
     endif
@@ -162,27 +172,22 @@ function! GotoEndtoken(line, col, tokenline, tokencol)
     execute "normal! %"
     let l:lineclose = line('.')
     let l:colclose  = col('.')
-    call setpos('.', [0, a:tokenline, a:tokencol, 0])
-    let l:chratlc = strgetchar(getline(a:tokenline), a:tokencol - 1)
-    if l:chratlc == char2nr(' ')
-        execute "normal w"
-    endif
-    let l:tokenline = line('.')
-    let l:tokencol  = col('.')
-    let l:chratlc = strgetchar(getline(l:tokenline), l:tokencol - 1)
-    " spaces and closing braces and newlines are closing braces
-    execute "normal! t "
+    " spaces and closing braces and newlines are token closers
+    call setpos('.', [0, l:tokenline, l:tokencol, 0])
+    execute "normal! f "
     let l:colspace  = col('.')
-    execute "normal! $"
-    let l:colend  = col('.')
-    let l:mincol  = min([l:colspace, l:colend])
-    if l:mincol == l:tokencol
-        let l:mincol = l:colend
+    if l:colspace > l:tokencol
+        " space was found, and we are one past the token end
+        call setpos('.', [0, l:tokenline, l:colspace - 1, 0])
+        return
     endif
     if l:lineclose == l:tokenline
-        let l:mincol  = min([l:mincol, l:colclose])
+        " this token is the only one inside the block
+        call setpos('.', [0, l:tokenline, l:colclose - 1, 0])
+        return
     endif
-    call setpos('.', [0, l:tokenline, l:mincol, 0])
+    " otherwise, the end of the token is the end of the line
+    execute "normal! $"
 endfunction
 
 function! ExpandCompletely()
