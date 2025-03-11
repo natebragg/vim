@@ -208,9 +208,14 @@ endfunction
 function! ExpandCompletely()
     let l:line0 = line('.')
     let l:col0  = col('.')
-    execute "normal! ^"
     let l:lineopen = line('.')
-    let l:colopen  = col('.')
+    let l:colopen = match(getline("."), '\S') + 1
+    let l:coleol = col('$')
+    " don't expand when there is no next character on the same line
+    if l:colopen == l:coleol - 1
+        call setpos('.', [0, l:line0, l:col0, 0])
+        return
+    endif
     let l:onblock = IsBlock(l:lineopen, l:colopen)
     " don't expand when not on a block
     if ! l:onblock
@@ -218,18 +223,13 @@ function! ExpandCompletely()
         return
     endif
     call GotoEndtoken(l:lineopen, l:colopen, l:lineopen, l:colopen)
+    " we now know where this block begins and ends
     let l:lineclose = line('.')
     let l:colclose  = col('.')
-    call setpos('.', [0, l:lineopen, l:colopen, 0])
-    " we now know where this block begins and ends
-    execute "normal! l"
+    " go to the first character after brace open, which can't be EOL
+    call setpos('.', [0, l:lineopen, l:colopen + 1, 0])
     let l:linetoken = line('.')
     let l:coltoken  = col('.')
-    " don't expand when there is no next character on the same line
-    if l:coltoken == l:colopen
-        call setpos('.', [0, l:line0, l:col0, 0])
-        return
-    endif
     let l:atblock = IsBlock(l:linetoken, l:coltoken)
     let l:startcol = l:atblock ? l:coltoken : l:colopen + &shiftwidth
     while 1
@@ -257,7 +257,7 @@ function! ExpandCompletely()
 endfunction
 
 nnoremap <leader>l %a<cr><esc>
-nnoremap <leader>t :call ExpandCompletely()<cr>
+nnoremap <leader>x :call ExpandCompletely()<cr>
 
 if has('autocmd')
     filetype plugin indent on
