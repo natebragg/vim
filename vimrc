@@ -121,10 +121,9 @@ function! BlockAction(startbrace, startaction, endaction, middleaction, offset)
         for i in range(l:linerhs - l:linelhs)
             let l:line = l:linelhs + i + 1
             call setpos('.', [0, l:line, l:collhs, 0])
-            let l:curchar = strgetchar(getline(l:line), l:collhs - 1)
-            if l:curchar == char2nr(' ')
-                execute "normal! " . a:middleaction
-            endif
+            let l:colnonspace = match(getline("."), '\S') + 1
+            call setpos('.', [0, l:line, l:colnonspace, 0])
+            execute "normal! " . a:middleaction
         endfor
     endif
     " if the line didn't change, to stay on the same
@@ -141,7 +140,7 @@ function! IndentBrace(startbrace)
 endfunction
 
 function! OutdentBrace(startbrace)
-    call BlockAction(a:startbrace, "\"_x", "\"_x", "\"_x", -1)
+    call BlockAction(a:startbrace, "\"_x", "\"_x", "\"_X", -1)
 endfunction
 
 nnoremap <leader>[{ :call IndentBrace('{')<cr>
