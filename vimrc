@@ -181,32 +181,19 @@ function! GotoEndtoken(line, col, tokenline, tokencol)
 
     if IsBlock(l:tokenline, l:tokencol)
         " if we started on a block, we have arrived at the end of the block
-        let l:chratlc = strgetchar(getline(a:tokenline), a:tokencol - 1)
+        let l:chratlc = strgetchar(getline(l:tokenline), l:tokencol - 1)
         call SelectBlock(nr2char(l:chratlc))
         execute "normal! v"
         return
     endif
 
-    call setpos('.', [0, a:line, a:col, 0])
-    execute "normal! %"
-    let l:lineclose = line('.')
-    let l:colclose  = col('.')
-    " spaces and closing braces and newlines are token closers
-    call setpos('.', [0, l:tokenline, l:tokencol, 0])
-    execute "normal! f "
-    let l:colspace  = col('.')
-    if l:colspace > l:tokencol
-        " space was found, and we are one past the token end
-        call setpos('.', [0, l:tokenline, l:colspace - 1, 0])
-        return
-    endif
-    if l:lineclose == l:tokenline
-        " this token is the only one inside the block
-        call setpos('.', [0, l:tokenline, l:colclose - 1, 0])
-        return
-    endif
-    " otherwise, the end of the token is the end of the line
-    execute "normal! $"
+    " not on a space or block---find the start of the current token
+    call search('\([	 ([{}\])"]\|^\)\@<=.', 'cb')
+    " now find the first character not followed by the end of line
+    " but followed by a space, brace, or quote
+    call search('.[	 ([{}\])"]\@=\|$', 'c')
+    " I think this is good enough...
+    " If not, revert to 50dac2
 endfunction
 
 function! ExpandCompletely()
