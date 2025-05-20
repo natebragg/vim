@@ -262,6 +262,7 @@ endfunction
 
 nnoremap <leader>l %a<cr><esc>
 nnoremap <leader>x :call ExpandCompletely()<cr>
+nnoremap <leader>et :call GotoEndtoken(line('.'), col('.'), line('.'), col('.'))<cr>
 
 if has('autocmd')
     filetype plugin indent on
