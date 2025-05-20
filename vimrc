@@ -174,18 +174,13 @@ endfunction
 
 function! GotoEndtoken(line, col, tokenline, tokencol)
     call setpos('.', [0, a:tokenline, a:tokencol, 0])
-    let l:chratlc = strgetchar(getline(a:tokenline), a:tokencol - 1)
-    if l:chratlc == char2nr(' ') ||
-     \ l:chratlc == char2nr('	')
-        execute "normal w"
-    endif
-    " the position of the first non-space character
+    call search('[^	 ]', 'c')
+    " the position of the first non-space character at or after a:tokencol
     let l:tokenline = line('.')
     let l:tokencol  = col('.')
 
     if IsBlock(l:tokenline, l:tokencol)
         " if we started on a block, we have arrived at the end of the block
-        call setpos('.', [0, l:tokenline, l:tokencol, 0])
         let l:chratlc = strgetchar(getline(a:tokenline), a:tokencol - 1)
         call SelectBlock(nr2char(l:chratlc))
         execute "normal! v"
