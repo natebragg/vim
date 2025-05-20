@@ -78,13 +78,17 @@ function! PopAllRegisters(stashed_registers)
 endfunction
 
 function! SelectBlock(brace)
-    if a:brace == '{'
+    if a:brace == '{' ||
+     \ a:brace == '}'
         execute 'normal! va{'
-    elseif a:brace == '('
+    elseif a:brace == '(' ||
+         \ a:brace == ')'
         execute 'normal! va('
-    elseif a:brace == '['
+    elseif a:brace == '[' ||
+         \ a:brace == ']'
         execute 'normal! va['
-    elseif a:brace == '<'
+    elseif a:brace == '<' ||
+         \ a:brace == '>'
         execute 'normal! va<'
     elseif a:brace == '"'
         execute 'normal! va"'
@@ -151,13 +155,19 @@ nnoremap <leader>]) :call OutdentBrace('(')<cr>
 nnoremap <leader>]] :call OutdentBrace('[')<cr>
 
 function! IsBlock(line, col)
-    let l:nrparen = char2nr('(')
-    let l:nrbrack = char2nr('{')
-    let l:nrsquar = char2nr('[')
+    let l:nrlparen = char2nr('(')
+    let l:nrrparen = char2nr(')')
+    let l:nrlbrack = char2nr('{')
+    let l:nrrbrack = char2nr('}')
+    let l:nrlsquar = char2nr('[')
+    let l:nrrsquar = char2nr(']')
     let l:chratlc = strgetchar(getline(a:line), a:col - 1)
-    let l:isparen = l:chratlc == l:nrparen
-    let l:isbrack = l:chratlc == l:nrbrack
-    let l:issquar = l:chratlc == l:nrsquar
+    let l:isparen = l:chratlc == l:nrlparen ||
+                  \ l:chratlc == l:nrrparen
+    let l:isbrack = l:chratlc == l:nrlbrack ||
+                  \ l:chratlc == l:nrrbrack
+    let l:issquar = l:chratlc == l:nrlsquar ||
+                  \ l:chratlc == l:nrrsquar
     let l:isblock = l:isparen || l:isbrack || l:issquar
     return l:isblock
 endfunction
