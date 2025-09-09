@@ -233,15 +233,22 @@ function! ExpandCompletely()
         if l:linetokenend == l:lineclose && l:colclose - l:coltokenend <= 1
             break
         endif
-        execute "normal! a^"
-        let l:linetoken = line('.')
-        let l:coltoken  = col('.')
+        let l:replacement = []
+        let l:line = getline('.')
+        let l:firsttoken = strpart(l:line, 0, l:coltokenend)
+        let l:restofline = strpart(l:line, l:coltokenend)
+        call add(l:replacement, l:firsttoken)
+        let l:coltoken = match(l:restofline, '\S') + 1
         let l:coloffset = l:startcol - l:coltoken
         if l:coloffset > 0
-            execute "normal! " .    l:coloffset  . "i ^"
+            let l:restofline = repeat(' ', l:coloffset) . l:restofline
         else
-            execute "normal! " . (- l:coloffset) . "X^"
+            let l:restofline = l:restofline[(- l:coloffset):]
         endif
+        call add(l:replacement, l:restofline)
+        call setline('.', l:replacement[0])
+        undojoin | call append('.', l:replacement[1:])
+        call setpos('.', [0, l:linetoken + 1, l:startcol, 0])
         let l:linetoken = line('.')
         let l:coltoken  = col('.')
     endwhile
