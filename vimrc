@@ -217,41 +217,39 @@ function! ExpandCompletely()
     " we now know where this block begins and ends
     let l:lineclose = line('.')
     let l:colclose  = col('.')
+    if l:lineopen != l:lineclose
+        echoerr "Can only completely expand expression on a single line"
+        return
+    endif
     " go to the first character after brace open, which can't be EOL
     call setpos('.', [0, l:lineopen, l:colopen + 1, 0])
     let l:linetoken = line('.')
     let l:coltoken  = col('.')
     let l:atblock = IsBlock(l:linetoken, l:coltoken)
-    let l:startcol = l:atblock ? l:coltoken : l:colopen + &shiftwidth
+    let l:startcol = l:atblock ? l:coltoken - 1 : l:colopen - 1 + &shiftwidth
+    let l:numspaces = l:colopen - 1
+    let l:tokenpos = l:colopen - 1
+    let l:replacement = []
+    let l:originalline = getline('.')
     while 1
-        call GotoEndtoken(l:lineopen, l:colopen, l:lineopen, l:colopen)
-        let l:lineclose = line('.')
-        let l:colclose  = col('.')
         call GotoEndtoken(l:lineopen, l:colopen, l:linetoken, l:coltoken)
         let l:linetokenend = line('.')
         let l:coltokenend  = col('.')
-        if l:linetokenend == l:lineclose && l:colclose - l:coltokenend <= 1
+        let l:lasttoken = l:linetokenend == l:lineclose && l:colclose - l:coltokenend <= 1
+        let l:tokenlen = l:lasttoken ? l:colclose - l:tokenpos : l:coltokenend - l:tokenpos
+        let l:thistoken = strpart(l:originalline, l:tokenpos, l:tokenlen)
+        let l:thisline = repeat(' ', l:numspaces) . l:thistoken
+        call add(l:replacement, l:thisline)
+        if l:lasttoken
             break
         endif
-        let l:replacement = []
-        let l:line = getline('.')
-        let l:firsttoken = strpart(l:line, 0, l:coltokenend)
-        let l:restofline = strpart(l:line, l:coltokenend)
-        call add(l:replacement, l:firsttoken)
-        let l:coltoken = match(l:restofline, '\S') + 1
-        let l:coloffset = l:startcol - l:coltoken
-        if l:coloffset > 0
-            let l:restofline = repeat(' ', l:coloffset) . l:restofline
-        else
-            let l:restofline = l:restofline[(- l:coloffset):]
-        endif
-        call add(l:replacement, l:restofline)
-        call setline('.', l:replacement[0])
-        undojoin | call append('.', l:replacement[1:])
-        call setpos('.', [0, l:linetoken + 1, l:startcol, 0])
-        let l:linetoken = line('.')
-        let l:coltoken  = col('.')
+        let l:numspaces = l:startcol
+        let l:tokenpos = match(l:originalline, '\S', l:coltokenend)
+        let l:coltoken = l:tokenpos + 1
     endwhile
+    call setline('.', l:replacement[0])
+    undojoin | call append('.', l:replacement[1:])
+    call setpos('.', [0, l:lineopen, l:colopen, 0])
 endfunction
 
 nnoremap <leader>l %a<cr><esc>
