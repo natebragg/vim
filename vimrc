@@ -196,6 +196,12 @@ function! GotoEndtoken(line, col, tokenline, tokencol)
     " If not, revert to 50dac2
 endfunction
 
+function! SubstrToLine(text, start, end, indent)
+    let l:len = a:end - a:start
+    let l:substr = strpart(a:text, a:start, l:len)
+    return repeat(' ', a:indent) . l:substr
+endfunction
+
 function! ExpandCompletely()
     let l:line0 = line('.')
     let l:col0  = col('.')
@@ -230,15 +236,16 @@ function! ExpandCompletely()
     let l:numspaces = l:colopen - 1
     let l:tokenpos = l:colopen - 1
     let l:replacement = []
+    let l:lock = 0
     let l:originalline = getline('.')
-    while 1
+    try
+      while 1
         call GotoEndtoken(l:lineopen, l:colopen, l:linetoken, l:coltoken)
         let l:linetokenend = line('.')
         let l:coltokenend  = col('.')
         let l:lasttoken = l:linetokenend == l:lineclose && l:colclose - l:coltokenend <= 1
-        let l:tokenlen = l:lasttoken ? l:colclose - l:tokenpos : l:coltokenend - l:tokenpos
-        let l:thistoken = strpart(l:originalline, l:tokenpos, l:tokenlen)
-        let l:thisline = repeat(' ', l:numspaces) . l:thistoken
+        let l:coltokenend = l:lasttoken ? l:coleol : l:coltokenend
+        let l:thisline = SubstrToLine(l:originalline, l:tokenpos, l:coltokenend, l:numspaces)
         call add(l:replacement, l:thisline)
         if l:lasttoken
             break
@@ -246,7 +253,22 @@ function! ExpandCompletely()
         let l:numspaces = l:startcol
         let l:tokenpos = match(l:originalline, '\S', l:coltokenend)
         let l:coltoken = l:tokenpos + 1
-    endwhile
+        let l:lock = len(l:replacement)
+      endwhile
+    catch /^Vim:Interrupt$/
+        if l:lock != len(l:replacement) && l:lasttoken
+            " processing is complete but got a signal before breaking
+        else
+            " more input remains
+            if l:lock != len(l:replacement)
+                " added a new line, but didn't finish updating the other state
+                let l:numspaces = l:startcol
+                let l:tokenpos = match(l:originalline, '\S', l:coltokenend)
+            endif
+            let l:thisline = SubstrToLine(l:originalline, l:tokenpos, l:coleol, l:numspaces)
+            call add(l:replacement, l:thisline)
+        endif
+    endtry
     call setline('.', l:replacement[0])
     undojoin | call append('.', l:replacement[1:])
     call setpos('.', [0, l:lineopen, l:colopen, 0])
