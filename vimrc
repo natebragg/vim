@@ -188,10 +188,10 @@ function! GotoEndtoken(line, col, tokenline, tokencol)
     endif
 
     " not on a space or block---find the start of the current token
-    call search('\([	 ([{}\])"]\|^\)\@<=.', 'cb')
+    call search('\([	 ([{}\])]\|^\)\@<=.', 'cb')
     " now find the first character not followed by the end of line
     " but followed by a space, brace, or quote
-    call search('.[	 ([{}\])"]\@=\|$', 'c')
+    call search('.[	 ([{}\])]\@=\|$', 'c')
     " I think this is good enough...
     " If not, revert to 50dac2
 endfunction
@@ -243,6 +243,10 @@ function! ExpandCompletely()
         call GotoEndtoken(l:lineopen, l:colopen, l:linetoken, l:coltoken)
         let l:linetokenend = line('.')
         let l:coltokenend  = col('.')
+        if l:tokenpos == l:coltokenend
+            echoerr "Somehow got a zero-width token!"
+            return
+        endif
         let l:lasttoken = l:linetokenend == l:lineclose && l:colclose - l:coltokenend <= 1
         let l:coltokenend = l:lasttoken ? l:coleol : l:coltokenend
         let l:thisline = SubstrToLine(l:originalline, l:tokenpos, l:coltokenend, l:numspaces)
